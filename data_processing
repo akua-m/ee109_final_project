@@ -7,29 +7,29 @@ import spatial.dsl._
     val file_loc = "/home/akuam/spatial/apps/src/"
     //val bias_forget_file = io.Source.fromFile(file_loc + "bias_forget.csv")
 
-    val bias_forget = SRAM[T](256)
+    
     val bias_forget_array = loadCSV1D[T](s"akuam@tucson.stanford.edu:/home/akuam/spatial/apps/src/bias_forget_final.csv", " ")
     val bias_f_mem = DRAM[T](256)
     setMem(bias_f_mem, bias_forget_array)
-    bias_forget load bias_f_mem
+    
 
-    val bias_input = SRAM[T](256)
+    
     val bias_input_array = loadCSV1D[T](s"akuam@tucson.stanford.edu:/home/akuam/spatial/apps/src/bias_input_final.csv", " ")
     val bias_in_mem = DRAM[T](256)
     setMem(bias_in_mem, bias_input_array)
-    bias_input load bias_in_mem
     
-    val bias_memory_cell = SRAM[T](256)
+    
+    
     val bias_memory_array = loadCSV1D[T](s"akuam@tucson.stanford.edu:/home/akuam/spatial/apps/src/bias_memory_cell_final.csv", " ")
     val bias_m_mem = DRAM[T](256)
     setMem(bias_m_mem, bias_memory_array)
-    bias_memory_cell load bias_m_mem
+    
 
-    val bias_output = SRAM[T](256)
+    
     val bias_output_array = loadCSV1D[T](s"akuam@tucson.stanford.edu:/home/akuam/spatial/apps/src/bias_output_final.csv", " ")
     val bias_o_mem = DRAM[T](256)
     setMem(bias_o_mem, bias_output_array)
-    bias_output load bias_o_mem
+    
 
     //val bias_output_layer = SRAM[T](1)
     //val input = args(0.10646543651819229125976562500000).to[Float]
@@ -39,69 +39,86 @@ import spatial.dsl._
     //setMem(bias_ol_mem, bias_olayer_array)
     //bias_output_layer load input
 
-    val weights_forget_gate = SRAM[T](256)
+    
     val weights_fg_array = loadCSV1D[T](s"akuam@tucson.stanford.edu:/home/akuam/spatial/apps/src/weights_forget_gate_final.csv", " ")
     val weights_fg_mem = DRAM[T](256)
     setMem(weights_fg_mem, weights_fg_array)
-    weights_forget_gate load weights_fg_mem
-
-    val weights_forget_hidden = SRAM[T](256, 256)
+    
     val weights_fgh_array = loadCSV1D[T](s"akuam@tucson.stanford.edu:/home/akuam/spatial/apps/src/weights_forget_hidden_final.csv", " ")
     val weights_fgh_mem = DRAM[T](256, 256)
     setMem(weights_fgh_mem, weights_fgh_array)
-    weights_forget_hidden load weights_fgh_mem
-
-    val weights_input_gate = SRAM[T](256)
+    
     val weights_i_array = loadCSV1D[T](s"akuam@tucson.stanford.edu:/home/akuam/spatial/apps/src/weights_input_gate_final.csv", " ")
     val weights_i_mem = DRAM[T](256)
     setMem(weights_i_mem, weights_i_array)
-    weights_input_gate load weights_i_mem
-
-    val weights_input_hidden = SRAM[T](256, 256)
+    
     val weights_ih_array = loadCSV1D[T](s"akuam@tucson.stanford.edu:/home/akuam/spatial/apps/src/weights_input_hidden_final.csv", " ")
     val weights_ih_mem = DRAM[T](256, 256)
     setMem(weights_ih_mem, weights_ih_array)
-    weights_input_hidden load weights_ih_mem
-
-    val weights_memory_cell = SRAM[T](256)
+    
     val weights_m_array = loadCSV1D[T](s"akuam@tucson.stanford.edu:/home/akuam/spatial/apps/src/weights_memory_cell_final.csv", " ")
     val weights_m_mem = DRAM[T](256)
     setMem(weights_m_mem, weights_m_array)
-    weights_memory_cell load weights_m_mem
-
-    val weights_memory_cell_hidden = SRAM[T](256, 256)
+    
     val weights_mh_array = loadCSV1D[T](s"akuam@tucson.stanford.edu:/home/akuam/spatial/apps/src/weights_memory_cell_hidden_final.csv", " ")
     val weights_mh_mem = DRAM[T](256, 256)
     setMem(weights_mh_mem, weights_mh_array)
-    weights_memory_cell_hidden load weights_mh_mem
-
-    val weights_output = SRAM[T](256)
+    
     val weights_o_array = loadCSV1D[T](s"akuam@tucson.stanford.edu:/home/akuam/spatial/apps/src/weights_output_final.csv", " ")
     val weights_o_mem = DRAM[T](256)
     setMem(weights_o_mem, weights_o_array)
-    weights_output load weights_o_mem
-
-    val weights_output_gate = SRAM[T](256)
+    
     val weights_og_array = loadCSV1D[T](s"akuam@tucson.stanford.edu:/home/akuam/spatial/apps/src/weights_output_gate_final.csv", " ")
     val weights_og_mem = DRAM[T](256)
     setMem(weights_og_mem, weights_og_array)
-    weights_output_gate load weights_og_mem
-
-    val weights_output_hidden = SRAM[T](256, 256)
+    
     val weights_oh_array = loadCSV1D[T](s"akuam@tucson.stanford.edu:/home/akuam/spatial/apps/src/weights_output_hidden_final.csv", " ")
     val weights_oh_mem = DRAM[T](256, 256)
     setMem(weights_oh_mem, weights_oh_array)
-    weights_output_hidden load weights_oh_mem
+    
 
 
     Accel {
       //Accelerable code
+      val bias_forget = SRAM[T](256)
+      bias_forget load bias_f_mem
+
+      val bias_input = SRAM[T](256)
+      bias_input load bias_in_mem
+
+      val bias_memory_cell = SRAM[T](256)
+      bias_memory_cell load bias_m_mem
+
+      val bias_output = SRAM[T](256)
+      bias_output load bias_o_mem
+
+      val weights_forget_gate = SRAM[T](256)
+      weights_forget_gate load weights_fg_mem
       
+      val weights_forget_hidden = SRAM[T](256, 256)
+      weights_forget_hidden load weights_fgh_mem
+
+      val weights_input_gate = SRAM[T](256)
+      weights_input_gate load weights_i_mem
+
+      val weights_input_hidden = SRAM[T](256, 256)
+      weights_input_hidden load weights_ih_mem
+
+      val weights_memory_cell = SRAM[T](256)
+      weights_memory_cell load weights_m_mem
+
+      val weights_memory_cell_hidden = SRAM[T](256, 256)
+      weights_memory_cell_hidden load weights_mh_mem
+
+      val weights_output = SRAM[T](256)
+      weights_output load weights_o_mem
+
+      val weights_output_gate = SRAM[T](256)
+      weights_output_gate load weights_og_mem
+
+      val weights_output_hidden = SRAM[T](256, 256)
+      weights_output_hidden load weights_oh_mem
     }
-    
-    //for( a <- 1 to 256){
-    //  bias_forget(1, a) = bias_forget_single(a)
-    //}
-   // println(bias_forget)  
+      
   }
 }
