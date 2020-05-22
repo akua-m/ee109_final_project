@@ -97,19 +97,19 @@ import spatial.dsl._
 
         val argRegOut = ArgOut[T]
     
-        val bias_forget_array = loadCSV1D[T](sys.env("SPATIAL_HOME") + "apps/src/bias_forget_final.csv", " ")
+        val bias_forget_array = loadCSV1D[T](s"/home/akuam/spatial/apps/src/bias_forget_final.csv", " ")
         val bias_f_mem = DRAM[T](1, 256)
         setMem(bias_f_mem, bias_forget_array)
             
-        val bias_input_array = loadCSV1D[T](sys.env("SPATIAL_HOME") + "apps/src/bias_input_final.csv", " ")
+        val bias_input_array = loadCSV1D[T](s"/home/akuam/spatial/apps/src/bias_input_final.csv", " ")
         val bias_in_mem = DRAM[T](1, 256)
         setMem(bias_in_mem, bias_input_array)
         
-        val bias_memory_array = loadCSV1D[T](sys.env("SPATIAL_HOME") + "apps/src/bias_memory_cell_final.csv", " ")
+        val bias_memory_array = loadCSV1D[T](s"/home/akuam/spatial/apps/src/bias_memory_cell_final.csv", " ")
         val bias_m_mem = DRAM[T](1, 256)
         setMem(bias_m_mem, bias_memory_array)
         
-        val bias_output_array = loadCSV1D[T](sys.env("SPATIAL_HOME") + "apps/src/bias_output_final.csv", " ")
+        val bias_output_array = loadCSV1D[T](s"/home/akuam/spatial/apps/src/bias_output_final.csv", " ")
         val bias_o_mem = DRAM[T](1, 256)
         setMem(bias_o_mem, bias_output_array)
     
@@ -121,43 +121,43 @@ import spatial.dsl._
         //setMem(bias_ol_mem, bias_olayer_array)
         //bias_output_layer load input
 
-        val weights_fg_array = loadCSV1D[T](sys.env("SPATIAL_HOME") + "apps/src/weights_forget_gate_final.csv", " ")
+        val weights_fg_array = loadCSV1D[T](s"/home/akuam/spatial/apps/src/weights_forget_gate_final.csv", " ")
         val weights_fg_mem = DRAM[T](1, 256)
         setMem(weights_fg_mem, weights_fg_array)
         
-        val weights_fgh_array = loadCSV1D[T](sys.env("SPATIAL_HOME") + "apps/src/weights_forget_hidden_final.csv", " ")
+        val weights_fgh_array = loadCSV1D[T](s"/home/akuam/spatial/apps/src/weights_forget_hidden_final.csv", " ")
         val weights_fgh_mem = DRAM[T](256, 256)
         setMem(weights_fgh_mem, weights_fgh_array)
         
-        val weights_i_array = loadCSV1D[T](sys.env("SPATIAL_HOME") + "apps/src/weights_input_gate_final.csv", " ")
+        val weights_i_array = loadCSV1D[T](s"/home/akuam/spatial/apps/src/weights_input_gate_final.csv", " ")
         val weights_i_mem = DRAM[T](1, 256)
         setMem(weights_i_mem, weights_i_array)
         
-        val weights_ih_array = loadCSV1D[T](sys.env("SPATIAL_HOME") + "apps/src/weights_input_hidden_final.csv", " ")
+        val weights_ih_array = loadCSV1D[T](s"/home/akuam/spatial/apps/src/weights_input_hidden_final.csv", " ")
         val weights_ih_mem = DRAM[T](256, 256)
         setMem(weights_ih_mem, weights_ih_array)
         
-        val weights_m_array = loadCSV1D[T](sys.env("SPATIAL_HOME") + "apps/src/weights_memory_cell_final.csv", " ")
+        val weights_m_array = loadCSV1D[T](s"/home/akuam/spatial/apps/src/weights_memory_cell_final.csv", " ")
         val weights_m_mem = DRAM[T](1, 256)
         setMem(weights_m_mem, weights_m_array)
         
-        val weights_mh_array = loadCSV1D[T](sys.env("SPATIAL_HOME") + "apps/src/weights_memory_cell_hidden_final.csv", " ")
+        val weights_mh_array = loadCSV1D[T](s"/home/akuam/spatial/apps/src/weights_memory_cell_hidden_final.csv", " ")
         val weights_mh_mem = DRAM[T](256, 256)
         setMem(weights_mh_mem, weights_mh_array)
         
-        val weights_o_array = loadCSV1D[T](sys.env("SPATIAL_HOME") + "apps/src/weights_output_final.csv", " ")
+        val weights_o_array = loadCSV1D[T](s"/home/akuam/spatial/apps/src/weights_output_final.csv", " ")
         val weights_o_mem = DRAM[T](1, 256)
         setMem(weights_o_mem, weights_o_array)
         
-        val weights_og_array = loadCSV1D[T](sys.env("SPATIAL_HOME") + "apps/src/weights_output_gate_final.csv", " ")
+        val weights_og_array = loadCSV1D[T](s"/home/akuam/spatial/apps/src/weights_output_gate_final.csv", " ")
         val weights_og_mem = DRAM[T](1, 256)
         setMem(weights_og_mem, weights_og_array)
         
-        val weights_oh_array = loadCSV1D[T](sys.env("SPATIAL_HOME") + "apps/src/weights_output_hidden_final.csv", " ")
+        val weights_oh_array = loadCSV1D[T](s"/home/akuam/spatial/apps/src/weights_output_hidden_final.csv", " ")
         val weights_oh_mem = DRAM[T](256, 256)
         setMem(weights_oh_mem, weights_oh_array)
 
-        val window_array = loadCSV1D[T](sys.env("SPATIAL_HOME") + "apps/src/window.csv", " ")
+        val window_array = loadCSV1D[T](s"/home/akuam/spatial/apps/src/window.csv", " ")
         val window_mem = DRAM[T](7)
         setMem(window_mem, window_array)
 
