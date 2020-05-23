@@ -49,9 +49,9 @@ import spatial.dsl._
         }
 
         c_sram
-	}
+    }
 
-	def element_sigmoid(a_operand: SRAM2[T]) : SRAM2[T] = { 
+    def element_sigmoid(a_operand: SRAM2[T]) : SRAM2[T] = { 
 
 		val a_sigmoid = SRAM[T](a_operand.rows, a_operand.cols)  //a_operand and b_operand are the same size
         
@@ -62,9 +62,9 @@ import spatial.dsl._
         }
 
         a_sigmoid
-	}
+     }
 
-	def element_tanh(a_operand: SRAM2[T]) : SRAM2[T] = { 
+     def element_tanh(a_operand: SRAM2[T]) : SRAM2[T] = { 
 
 		val a_tanh = SRAM[T](a_operand.rows, a_operand.cols)  //a_operand and b_operand are the same size
         
@@ -75,9 +75,9 @@ import spatial.dsl._
         }
 
         a_tanh
-	}
+      }
 
-	def LSTM_Cell (arg_input_gate: SRAM2[T], arg_forget_gate: SRAM2[T], arg_output_gate: SRAM2[T], arg_memory_cell: SRAM2[T], arg_output: SRAM2[T], arg_state: SRAM2[T]): Unit =  {
+     def LSTM_Cell (arg_input_gate: SRAM2[T], arg_forget_gate: SRAM2[T], arg_output_gate: SRAM2[T], arg_memory_cell: SRAM2[T], arg_output: SRAM2[T], arg_state: SRAM2[T]): Unit =  {
 		//state = state * forget_gate + input_gate * memory_cell	
 		//output = output_gate * tf.tanh(state)
         
@@ -85,10 +85,10 @@ import spatial.dsl._
 
 		val output = element_mult(arg_output_gate, element_tanh(state))
 
-    }
+      }
 
 	
-	def main (args: Array[String]): Unit = {
+     def main (args: Array[String]): Unit = {
         //data processing 
 		//prepare memories to pass to Accel
 		
@@ -97,19 +97,19 @@ import spatial.dsl._
 
         val argRegOut = ArgOut[T]
     
-        val bias_forget_array = loadCSV1D[T](s"/home/akuam/spatial/apps/src/bias_forget_final.csv", " ")
+        val bias_forget_array = loadCSV1D[T]("/home/akuam/spatial/apps/src/bias_forget_final.csv", ",")
         val bias_f_mem = DRAM[T](1, 256)
         setMem(bias_f_mem, bias_forget_array)
             
-        val bias_input_array = loadCSV1D[T](s"/home/akuam/spatial/apps/src/bias_input_final.csv", " ")
+        val bias_input_array = loadCSV1D[T]("/home/akuam/spatial/apps/src/bias_input_final.csv", ",")
         val bias_in_mem = DRAM[T](1, 256)
         setMem(bias_in_mem, bias_input_array)
         
-        val bias_memory_array = loadCSV1D[T](s"/home/akuam/spatial/apps/src/bias_memory_cell_final.csv", " ")
+        val bias_memory_array = loadCSV1D[T]("/home/akuam/spatial/apps/src/bias_memory_cell_final.csv", ",")
         val bias_m_mem = DRAM[T](1, 256)
         setMem(bias_m_mem, bias_memory_array)
         
-        val bias_output_array = loadCSV1D[T](s"/home/akuam/spatial/apps/src/bias_output_final.csv", " ")
+        val bias_output_array = loadCSV1D[T]("/home/akuam/spatial/apps/src/bias_output_final.csv", ",")
         val bias_o_mem = DRAM[T](1, 256)
         setMem(bias_o_mem, bias_output_array)
     
@@ -121,43 +121,43 @@ import spatial.dsl._
         //setMem(bias_ol_mem, bias_olayer_array)
         //bias_output_layer load input
 
-        val weights_fg_array = loadCSV1D[T](s"/home/akuam/spatial/apps/src/weights_forget_gate_final.csv", " ")
+        val weights_fg_array = loadCSV1D[T]("/home/akuam/spatial/apps/src/weights_forget_gate_final.csv", ",")
         val weights_fg_mem = DRAM[T](1, 256)
         setMem(weights_fg_mem, weights_fg_array)
         
-        val weights_fgh_array = loadCSV1D[T](s"/home/akuam/spatial/apps/src/weights_forget_hidden_final.csv", " ")
+        val weights_fgh_array = loadCSV1D[T]("/home/akuam/spatial/apps/src/weights_forget_hidden_final.csv", ",")
         val weights_fgh_mem = DRAM[T](256, 256)
         setMem(weights_fgh_mem, weights_fgh_array)
         
-        val weights_i_array = loadCSV1D[T](s"/home/akuam/spatial/apps/src/weights_input_gate_final.csv", " ")
+        val weights_i_array = loadCSV1D[T]("/home/akuam/spatial/apps/src/weights_input_gate_final.csv", ",")
         val weights_i_mem = DRAM[T](1, 256)
         setMem(weights_i_mem, weights_i_array)
         
-        val weights_ih_array = loadCSV1D[T](s"/home/akuam/spatial/apps/src/weights_input_hidden_final.csv", " ")
+        val weights_ih_array = loadCSV1D[T]("/home/akuam/spatial/apps/src/weights_input_hidden_final.csv", ",")
         val weights_ih_mem = DRAM[T](256, 256)
         setMem(weights_ih_mem, weights_ih_array)
         
-        val weights_m_array = loadCSV1D[T](s"/home/akuam/spatial/apps/src/weights_memory_cell_final.csv", " ")
+        val weights_m_array = loadCSV1D[T]("/home/akuam/spatial/apps/src/weights_memory_cell_final.csv", ",")
         val weights_m_mem = DRAM[T](1, 256)
         setMem(weights_m_mem, weights_m_array)
         
-        val weights_mh_array = loadCSV1D[T](s"/home/akuam/spatial/apps/src/weights_memory_cell_hidden_final.csv", " ")
+        val weights_mh_array = loadCSV1D[T]("/home/akuam/spatial/apps/src/weights_memory_cell_hidden_final.csv", ",")
         val weights_mh_mem = DRAM[T](256, 256)
         setMem(weights_mh_mem, weights_mh_array)
         
-        val weights_o_array = loadCSV1D[T](s"/home/akuam/spatial/apps/src/weights_output_final.csv", " ")
+        val weights_o_array = loadCSV1D[T]("/home/akuam/spatial/apps/src/weights_output_final.csv", ",")
         val weights_o_mem = DRAM[T](1, 256)
         setMem(weights_o_mem, weights_o_array)
         
-        val weights_og_array = loadCSV1D[T](s"/home/akuam/spatial/apps/src/weights_output_gate_final.csv", " ")
+        val weights_og_array = loadCSV1D[T]("/home/akuam/spatial/apps/src/weights_output_gate_final.csv", ",")
         val weights_og_mem = DRAM[T](1, 256)
         setMem(weights_og_mem, weights_og_array)
         
-        val weights_oh_array = loadCSV1D[T](s"/home/akuam/spatial/apps/src/weights_output_hidden_final.csv", " ")
+        val weights_oh_array = loadCSV1D[T]("/home/akuam/spatial/apps/src/weights_output_hidden_final.csv", ",")
         val weights_oh_mem = DRAM[T](256, 256)
         setMem(weights_oh_mem, weights_oh_array)
 
-        val window_array = loadCSV1D[T](s"/home/akuam/spatial/apps/src/window.csv", " ")
+        val window_array = loadCSV1D[T]("/home/akuam/spatial/apps/src/window.csv", ",")
         val window_mem = DRAM[T](7)
         setMem(window_mem, window_array)
 
@@ -166,7 +166,7 @@ import spatial.dsl._
         val d1 = DRAM[T](1, 256)
         setMem(d1, c_init)
 
-		Accel { 
+	Accel { 
 
 			//set memories
             val bias_forget = SRAM[T](1, 256)
