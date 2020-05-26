@@ -2,7 +2,7 @@
 import spatial.dsl._
 
 
-@spatial object testing extends SpatialApp { 
+@spatial object LUTTesting extends SpatialApp { 
 
 	// type T = Float  //Float = FltPt[_24, _8] = [_significant bits, _exponent bits]
     type T = FixPt[TRUE, _16, _16]
@@ -62,9 +62,9 @@ import spatial.dsl._
         c_sram
     }
 
-    def tanh(a_operand: SRAM2[T]): SRAM2[T] = {
+    def tanh_test(a_operand: SRAM2[T]): SRAM2[T] = {
         val sigmoid_lut = LUT[T](15,3)(0.390625.to[T], 0.453125.to[T], 0.4049.to[T], 0.453125.to[T], 0.515625.to[T], 0.4558.to[T], 0.515625.to[T], 0.578125.to[T], 0.5038.to[T], 0.578125.to[T], 0.640625.to[T], 0.5490.to[T], 0.640625.to[T], 0.703125.to[T], 0.5911.to[T], 0.703125.to[T], 0.78125.to[T], 0.6348.to[T], 0.78125.to[T], 0.859375.to[T], 0.6791.to[T], 0.859375.to[T], 0.9375.to[T], 0.7190.to[T], 0.9375.to[T], 1.046875.to[T], 0.7609.to[T], 1.046875.to[T], 1.171875.to[T], 0.8057.to[T], 1.171875.to[T], 1.328125.to[T], 0.8493.to[T], 1.328125.to[T], 1.53125.to[T], 0.8916.to[T], 1.53125.to[T], 1.859375.to[T], 0.9329.to[T], 1.859375.to[T], 2.90625.to[T], 0.9740.to[T], 2.90625.to[T], 2.90625.to[T], 1.to[T])
-        val a_tanh = SRAM[T](a_operand.rows, a_operand.cols)
+        val a_tanh_test = SRAM[T](a_operand.rows, a_operand.cols)
         val temp = SRAM[T](a_operand.rows, a_operand.cols)
 
         Foreach(a_operand.rows.to[Int] by 1) { r =>
@@ -111,14 +111,14 @@ import spatial.dsl._
                 } 
 
                 if (a_operand(r, c) < 0) {
-                    a_operand(r, c) = 1 - temp(r,c)
+                    a_tanh_test(r, c) = 1 - temp(r,c)
                 } else {
-                    a_operand(r, c) = temp(r,c)
+                    a_tanh_test(r, c) = temp(r,c)
                 }
             }
         }
 
-        a_tanh        
+        a_tanh_test        
     }
 
     def element_sigmoid(a_operand: SRAM2[T]) : SRAM2[T] = { 
@@ -317,7 +317,7 @@ import spatial.dsl._
                 val output_gate = element_sigmoid(output_gate_matrix)
 
                 val memory_cell_matrix = element_add(element_add(matrix_mult(input, weights_memory_cell), matrix_mult(output, weights_memory_cell_hidden)), bias_memory_cell)
-                val memory_cell = tanh(memory_cell_matrix)
+                val memory_cell = tanh_test(memory_cell_matrix)
 
                 //dram = LSMT cell call 
 
