@@ -2,9 +2,9 @@
 import spatial.dsl._
 
 
-@spatial object LUTTesting extends SpatialApp { 
+@spatial object RestructuredTest2 extends SpatialApp { 
 
-	// type T = Float  //Float = FltPt[_24, _8] = [_significant bits, _exponent bits]
+    // type T = Float  //Float = FltPt[_24, _8] = [_significant bits, _exponent bits]
     type T = FixPt[TRUE, _16, _16]
 
     def sigmoid(a: T) = {
@@ -16,8 +16,8 @@ import spatial.dsl._
       // TODO: Fill in your tanh implementation.
       a
     }
-	
-	def matrix_mult(a_operand: SRAM2[T], b_operand: SRAM2[T]) : SRAM2[T] = { 
+    
+    def matrix_mult(a_operand: SRAM2[T], b_operand: SRAM2[T]) : SRAM2[T] = { 
 
         val c_sram = SRAM[T](a_operand.rows.to[Int], b_operand.cols.to[Int])
 
@@ -33,12 +33,12 @@ import spatial.dsl._
             temp
         }{_+_}
 
-	}
+    }
 
 
     def element_mult(a_operand: SRAM2[T], b_operand: SRAM2[T]) : SRAM2[T] = {  
 
-		val c_sram = SRAM[T](a_operand.rows, a_operand.cols)  //a_operand and b_operand are the same size
+        val c_sram = SRAM[T](a_operand.rows, a_operand.cols)  //a_operand and b_operand are the same size
         
         Foreach(a_operand.rows.to[Int] by 1) { r =>
             Foreach(a_operand.cols.to[Int] by 1) { c =>
@@ -47,11 +47,11 @@ import spatial.dsl._
         }
 
         c_sram
-	}
+    }
 
     def element_add(a_operand: SRAM2[T], b_operand: SRAM2[T]) : SRAM2[T] = { 
 
-		val c_sram = SRAM[T](a_operand.rows, a_operand.cols)  //a_operand and b_operand are the same size
+        val c_sram = SRAM[T](a_operand.rows, a_operand.cols)  //a_operand and b_operand are the same size
         
         Foreach(a_operand.rows.to[Int] by 1) { r =>
             Foreach(a_operand.cols.to[Int] by 1) { c =>
@@ -62,9 +62,45 @@ import spatial.dsl._
         c_sram
     }
 
+    def element_sigmoid(a_operand: SRAM2[T]) : SRAM2[T] = { 
+
+        val a_sigmoid = SRAM[T](a_operand.rows, a_operand.cols)  //a_operand and b_operand are the same size
+        
+        Foreach(a_operand.rows.to[Int] by 1) { r =>
+            Foreach(a_operand.cols.to[Int] by 1) { c =>
+                a_sigmoid(r, c) = sigmoid(a_operand(r, c))
+            }
+        }
+
+        a_sigmoid
+    }
+
+    def element_tanh(a_operand: SRAM2[T]) : SRAM2[T] = { 
+
+        val a_tanh = SRAM[T](a_operand.rows, a_operand.cols)  //a_operand and b_operand are the same size
+        
+        Foreach(a_operand.rows.to[Int] by 1) { r =>
+            Foreach(a_operand.cols.to[Int] by 1) { c =>
+                a_tanh(r, c) = tanh(a_operand(r, c))
+            }
+        }
+
+        a_tanh
+    }
+
+    def LSTM_Cell (arg_input_gate: SRAM2[T], arg_forget_gate: SRAM2[T], arg_output_gate: SRAM2[T], arg_memory_cell: SRAM2[T], arg_output: SRAM2[T], arg_state: SRAM2[T]): Unit =  {
+        //state = state * forget_gate + input_gate * memory_cell    
+        //output = output_gate * tf.tanh(state)
+        
+        val state = element_add(element_mult(arg_state, arg_forget_gate), element_mult(arg_input_gate, arg_memory_cell))
+
+        val output = element_mult(arg_output_gate, element_tanh(state))
+
+    }
+
     def tanh_test(a_operand: SRAM2[T]): SRAM2[T] = {
         val sigmoid_lut = LUT[T](15,3)(0.390625.to[T], 0.453125.to[T], 0.4049.to[T], 0.453125.to[T], 0.515625.to[T], 0.4558.to[T], 0.515625.to[T], 0.578125.to[T], 0.5038.to[T], 0.578125.to[T], 0.640625.to[T], 0.5490.to[T], 0.640625.to[T], 0.703125.to[T], 0.5911.to[T], 0.703125.to[T], 0.78125.to[T], 0.6348.to[T], 0.78125.to[T], 0.859375.to[T], 0.6791.to[T], 0.859375.to[T], 0.9375.to[T], 0.7190.to[T], 0.9375.to[T], 1.046875.to[T], 0.7609.to[T], 1.046875.to[T], 1.171875.to[T], 0.8057.to[T], 1.171875.to[T], 1.328125.to[T], 0.8493.to[T], 1.328125.to[T], 1.53125.to[T], 0.8916.to[T], 1.53125.to[T], 1.859375.to[T], 0.9329.to[T], 1.859375.to[T], 2.90625.to[T], 0.9740.to[T], 2.90625.to[T], 2.90625.to[T], 1.to[T])
-        val a_tanh_test = SRAM[T](a_operand.rows, a_operand.cols)
+        val a_tanh_test = SRAM2[T](a_operand.rows, a_operand.cols)
         val temp = SRAM[T](a_operand.rows, a_operand.cols)
 
         Foreach(a_operand.rows.to[Int] by 1) { r =>
@@ -121,47 +157,11 @@ import spatial.dsl._
         a_tanh_test        
     }
 
-    def element_sigmoid(a_operand: SRAM2[T]) : SRAM2[T] = { 
-
-		val a_sigmoid = SRAM[T](a_operand.rows, a_operand.cols)  //a_operand and b_operand are the same size
-        
-        Foreach(a_operand.rows.to[Int] by 1) { r =>
-            Foreach(a_operand.cols.to[Int] by 1) { c =>
-                a_sigmoid(r, c) = sigmoid(a_operand(r, c))
-            }
-        }
-
-        a_sigmoid
-    }
-
-    def element_tanh(a_operand: SRAM2[T]) : SRAM2[T] = { 
-
-		val a_tanh = SRAM[T](a_operand.rows, a_operand.cols)  //a_operand and b_operand are the same size
-        
-        Foreach(a_operand.rows.to[Int] by 1) { r =>
-            Foreach(a_operand.cols.to[Int] by 1) { c =>
-                a_tanh(r, c) = tanh(a_operand(r, c))
-            }
-        }
-
-        a_tanh
-    }
-
-    def LSTM_Cell (arg_input_gate: SRAM2[T], arg_forget_gate: SRAM2[T], arg_output_gate: SRAM2[T], arg_memory_cell: SRAM2[T], arg_output: SRAM2[T], arg_state: SRAM2[T]): Unit =  {
-		//state = state * forget_gate + input_gate * memory_cell	
-		//output = output_gate * tf.tanh(state)
-        
-		val state = element_add(element_mult(arg_state, arg_forget_gate), element_mult(arg_input_gate, arg_memory_cell))
-
-		val output = element_mult(arg_output_gate, element_tanh(state))
-
-    }
-
-	
+    
     def main (args: Array[String]): Unit = {
         //data processing 
-		//prepare memories to pass to Accel
-		
+        //prepare memories to pass to Accel
+        
         //val file_loc = "/home/jluquin/spatial/apps/src/"
         //val bias_forget_file = io.Source.fromFile(file_loc + "bias_forget.csv")
 
@@ -232,7 +232,7 @@ import spatial.dsl._
         val v = ArgIn[T]
         setArg(v, args(0).to[T])
 
-	    Accel { 
+        Accel { 
 
             val bias_output_layer = SRAM[T](1, 1)
             //val input = args(0.10646543651819229125976562500000).to[Float]
@@ -242,7 +242,7 @@ import spatial.dsl._
             //setMem(bias_ol_mem, bias_olayer_array)
             //bias_output_layer load input
 
-			//set memories
+            //set memories
             val bias_forget = SRAM[T](1, 256)
             bias_forget load bias_f_mem
 
@@ -286,10 +286,10 @@ import spatial.dsl._
             window load window_mem
         
 
-			//for loop to scroll through input window
+            //for loop to scroll through input window
 
-			val state = SRAM[T](1, 256)
-			val output = SRAM[T](1, 256)
+            val state = SRAM[T](1, 256)
+            val output = SRAM[T](1, 256)
             output load d1
 
             val input = SRAM[T](1, 1)
@@ -317,7 +317,7 @@ import spatial.dsl._
                 val output_gate = element_sigmoid(output_gate_matrix)
 
                 val memory_cell_matrix = element_add(element_add(matrix_mult(input, weights_memory_cell), matrix_mult(output, weights_memory_cell_hidden)), bias_memory_cell)
-                val memory_cell = tanh_test(memory_cell_matrix)
+                val memory_cell = element_tanh(memory_cell_matrix)
 
                 //dram = LSMT cell call 
 
@@ -325,15 +325,15 @@ import spatial.dsl._
 
             }                  
                     
-			//end for loop
+            //end for loop
 
-			//use last state and ouput for prediction equation
+            //use last state and ouput for prediction equation
             val prediction = element_add(matrix_mult(output, weights_output), bias_output_layer)
 
             argRegOut := prediction(0,0)
 
-		}
+        }
 
         //println("prediction: " + argRegOut)
-	}
+    }
 }
