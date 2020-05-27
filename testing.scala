@@ -81,7 +81,7 @@ import spatial.dsl._
         
         Foreach(a_operand.rows.to[Int] by 1) { r =>
             Foreach(a_operand.cols.to[Int] by 1) { c =>
-                a_tanh(r, c) = tanh(a_operand(r, c))
+                a_tanh(r, c) = tanh_test(a_operand(r, c))
             }
         }
 
@@ -98,9 +98,9 @@ import spatial.dsl._
 
     }
 
-    def tanh_test(a_operand: SRAM2[T]): SRAM2[T] = {
+    def tanh_test(a_operand: T): T = {
         val sigmoid_lut = LUT[T](15,3)(0.390625.to[T], 0.453125.to[T], 0.4049.to[T], 0.453125.to[T], 0.515625.to[T], 0.4558.to[T], 0.515625.to[T], 0.578125.to[T], 0.5038.to[T], 0.578125.to[T], 0.640625.to[T], 0.5490.to[T], 0.640625.to[T], 0.703125.to[T], 0.5911.to[T], 0.703125.to[T], 0.78125.to[T], 0.6348.to[T], 0.78125.to[T], 0.859375.to[T], 0.6791.to[T], 0.859375.to[T], 0.9375.to[T], 0.7190.to[T], 0.9375.to[T], 1.046875.to[T], 0.7609.to[T], 1.046875.to[T], 1.171875.to[T], 0.8057.to[T], 1.171875.to[T], 1.328125.to[T], 0.8493.to[T], 1.328125.to[T], 1.53125.to[T], 0.8916.to[T], 1.53125.to[T], 1.859375.to[T], 0.9329.to[T], 1.859375.to[T], 2.90625.to[T], 0.9740.to[T], 2.90625.to[T], 2.90625.to[T], 1.to[T])
-        val a_tanh_test = SRAM2[T](a_operand.rows, a_operand.cols)
+        val a_tanh_test = SRAM[T](a_operand.rows, a_operand.cols)
         val temp = SRAM[T](a_operand.rows, a_operand.cols)
 
         Foreach(a_operand.rows.to[Int] by 1) { r =>
@@ -112,35 +112,35 @@ import spatial.dsl._
                     temp(r,c) = a_operand(r, c)
                 }
 
-                if (sigmoid_lut(0,1) < temp(r,c) < sigmoid_lut(0,2)) {
+                if (sigmoid_lut(0,1) <= temp(r,c) <= sigmoid_lut(0,2)) {
                     temp(r,c) = sigmoid_lut(0,3) 
-                } else if (sigmoid_lut(1,1) < temp(r,c) < sigmoid_lut(1,2)) {
+                } else if (sigmoid_lut(1,1) <= temp(r,c) <= sigmoid_lut(1,2)) {
                     temp(r,c) = sigmoid_lut(1,3) 
-                } else if (sigmoid_lut(2,1) < temp(r,c) < sigmoid_lut(2,2)) {
+                } else if (sigmoid_lut(2,1) <= temp(r,c) <= sigmoid_lut(2,2)) {
                     temp(r,c) = sigmoid_lut(2,3)
-                } else if (sigmoid_lut(3,1) < temp(r,c) < sigmoid_lut(3,2)) {
+                } else if (sigmoid_lut(3,1) <= temp(r,c) <= sigmoid_lut(3,2)) {
                     temp(r,c) = sigmoid_lut(3,3)
-                } else if (sigmoid_lut(4,1) < temp(r,c) < sigmoid_lut(4,2)) {
+                } else if (sigmoid_lut(4,1) <= temp(r,c) <= sigmoid_lut(4,2)) {
                     temp(r,c) = sigmoid_lut(4,3)
-                } else if (sigmoid_lut(5,1) < temp(r,c) < sigmoid_lut(5,2)) {
+                } else if (sigmoid_lut(5,1) <= temp(r,c) <= sigmoid_lut(5,2)) {
                     temp(r,c) = sigmoid_lut(5,3)
-                } else if (sigmoid_lut(6,1) < temp(r,c) < sigmoid_lut(6,2)) {
+                } else if (sigmoid_lut(6,1) <= temp(r,c) <= sigmoid_lut(6,2)) {
                     temp(r,c) = sigmoid_lut(6,3)
-                } else if (sigmoid_lut(7,1) < temp(r,c) < sigmoid_lut(7,2)) {
+                } else if (sigmoid_lut(7,1) <= temp(r,c) <= sigmoid_lut(7,2)) {
                     temp(r,c) = sigmoid_lut(7,3)
-                } else if (sigmoid_lut(8,1) < temp(r,c) < sigmoid_lut(8,2)) {
+                } else if (sigmoid_lut(8,1) <= temp(r,c) <= sigmoid_lut(8,2)) {
                     temp(r,c) = sigmoid_lut(8,3)
-                } else if (sigmoid_lut(9,1) < temp(r,c) < sigmoid_lut(9,2)) {
+                } else if (sigmoid_lut(9,1) <= temp(r,c) <= sigmoid_lut(9,2)) {
                     temp(r,c) = sigmoid_lut(9,3)
-                } else if (sigmoid_lut(10,1) < temp(r,c) < sigmoid_lut(10,2)) {
+                } else if (sigmoid_lut(10,1) <= temp(r,c) <= sigmoid_lut(10,2)) {
                     temp(r,c) = sigmoid_lut(10,3)
-                } else if (sigmoid_lut(11,1) < temp(r,c) < sigmoid_lut(11,2)) {
+                } else if (sigmoid_lut(11,1) <= temp(r,c) <= sigmoid_lut(11,2)) {
                     temp(r,c) = sigmoid_lut(11,3)
-                } else if (sigmoid_lut(12,1) < temp(r,c) < sigmoid_lut(12,2)) {
+                } else if (sigmoid_lut(12,1) <= temp(r,c) <= sigmoid_lut(12,2)) {
                     temp(r,c) = sigmoid_lut(12,3)
-                } else if (sigmoid_lut(13,1) < temp(r,c) < sigmoid_lut(13,2)) {
+                } else if (sigmoid_lut(13,1) <= temp(r,c) <= sigmoid_lut(13,2)) {
                     temp(r,c) = sigmoid_lut(13,3)
-                } else if (sigmoid_lut(14,1) < temp(r,c)) {
+                } else if (sigmoid_lut(14,1) <= temp(r,c)) {
                     temp(r,c) = sigmoid_lut(14,3)
                 } else { // if x is less than 0.390625
 
