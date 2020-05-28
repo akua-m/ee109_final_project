@@ -124,36 +124,36 @@ import spatial.dsl._
                 }
                 
 
-                if (sigmoid_lut(0,1) < temp && temp <= sigmoid_lut(0,2)) {
-                    temp2 := sigmoid_lut(0,3) 
-                } else if (sigmoid_lut(1,1) < temp && temp <= sigmoid_lut(1,2)) {
-                    temp2 := sigmoid_lut(1,3) 
-                } else if (sigmoid_lut(2,1) < temp && temp <= sigmoid_lut(2,2)) {
-                    temp2 := sigmoid_lut(2,3)
-                } else if (sigmoid_lut(3,1) < temp && temp <= sigmoid_lut(3,2)) {
-                    temp2 := sigmoid_lut(3,3)
-                } else if (sigmoid_lut(4,1) < temp && temp <= sigmoid_lut(4,2)) {
-                    temp2 := sigmoid_lut(4,3)
-                } else if (sigmoid_lut(5,1) < temp && temp <= sigmoid_lut(5,2)) {
-                    temp2 := sigmoid_lut(5,3)
-                } else if (sigmoid_lut(6,1) < temp && temp <= sigmoid_lut(6,2)) {
-                    temp2 := sigmoid_lut(6,3)
-                } else if (sigmoid_lut(7,1) < temp && temp <= sigmoid_lut(7,2)) {
-                    temp2 := sigmoid_lut(7,3)
-                } else if (sigmoid_lut(8,1) < temp && temp <= sigmoid_lut(8,2)) {
-                    temp2 := sigmoid_lut(8,3)
-                } else if (sigmoid_lut(9,1) < temp && temp <= sigmoid_lut(9,2)) {
-                    temp2 := sigmoid_lut(9,3)
-                } else if (sigmoid_lut(10,1) < temp && temp <= sigmoid_lut(10,2)) {
-                    temp2 := sigmoid_lut(10,3)
-                } else if (sigmoid_lut(11,1) < temp && temp<= sigmoid_lut(11,2)) {
-                    temp2 := sigmoid_lut(11,3)
-                } else if (sigmoid_lut(12,1) < temp && temp<= sigmoid_lut(12,2)) {
-                    temp2 := sigmoid_lut(12,3)
-                } else if (sigmoid_lut(13,1) < temp && temp <= sigmoid_lut(13,2)) {
-                    temp2 := sigmoid_lut(13,3)
+                if (sigmoid_lut(0,0) < temp && temp <= sigmoid_lut(0,1)) {
+                    temp2 := sigmoid_lut(0,2) 
+                } else if (sigmoid_lut(1,0) < temp && temp <= sigmoid_lut(1,1)) {
+                    temp2 := sigmoid_lut(1,2) 
+                } else if (sigmoid_lut(2,0) < temp && temp <= sigmoid_lut(2,1)) {
+                    temp2 := sigmoid_lut(2,2)
+                } else if (sigmoid_lut(3,0) < temp && temp <= sigmoid_lut(3,1)) {
+                    temp2 := sigmoid_lut(3,2)
+                } else if (sigmoid_lut(4,0) < temp && temp <= sigmoid_lut(4,1)) {
+                    temp2 := sigmoid_lut(4,2)
+                } else if (sigmoid_lut(5,0) < temp && temp <= sigmoid_lut(5,1)) {
+                    temp2 := sigmoid_lut(5,2)
+                } else if (sigmoid_lut(6,0) < temp && temp <= sigmoid_lut(6,1)) {
+                    temp2 := sigmoid_lut(6,2)
+                } else if (sigmoid_lut(7,0) < temp && temp <= sigmoid_lut(7,1)) {
+                    temp2 := sigmoid_lut(7,2)
+                } else if (sigmoid_lut(8,0) < temp && temp <= sigmoid_lut(8,1)) {
+                    temp2 := sigmoid_lut(8,2)
+                } else if (sigmoid_lut(9,0) < temp && temp <= sigmoid_lut(9,1)) {
+                    temp2 := sigmoid_lut(9,2)
+                } else if (sigmoid_lut(10,0) < temp && temp <= sigmoid_lut(10,1)) {
+                    temp2 := sigmoid_lut(10,2)
+                } else if (sigmoid_lut(11,0) < temp && temp<= sigmoid_lut(11,1)) {
+                    temp2 := sigmoid_lut(11,2)
+                } else if (sigmoid_lut(12,0) < temp && temp<= sigmoid_lut(12,1)) {
+                    temp2 := sigmoid_lut(12,2)
+                } else if (sigmoid_lut(13,0) < temp && temp <= sigmoid_lut(13,1)) {
+                    temp2 := sigmoid_lut(13,2)
                 } else {
-                    temp2 := sigmoid_lut(14,3)
+                    temp2 := sigmoid_lut(14,2)
                 }
                 
 
