@@ -6,9 +6,13 @@ import spatial.dsl._
     // type T = Float  //Float = FltPt[_24, _8] = [_significant bits, _exponent bits]
     type T = FixPt[TRUE, _16, _16]
 
-    def sigmoid(a: T) = {
+    def sigmoid(a: T) = { //: T = {
       // TODO: Fill in your sigmoid implementation.
       a
+      //val a_sigmoid_test = Reg[T](0)
+      //a_sigmoid_test := (tanh_test(a/2) + 1)/2
+
+
     }
 
     def tanh(a: T) = {
@@ -61,14 +65,14 @@ import spatial.dsl._
         store_matrix
     }
 
-    def element_sigmoid(a_operand: SRAM2[T]) : SRAM2[T] = { 
+    def element_sigmoid(a_operand: SRAM2[T], store_matrix: SRAM2[T]) : SRAM2[T] = { 
 
     	/*
-        val a_sigmoid = SRAM[T](a_operand.rows, a_operand.cols)  //a_operand and b_operand are the same size
+        //val a_sigmoid = SRAM[T](a_operand.rows, a_operand.cols)  //a_operand and b_operand are the same size
         
         Foreach(a_operand.rows.to[Int] by 1) { r =>
             Foreach(a_operand.cols.to[Int] by 1) { c =>
-                a_sigmoid(r, c) = sigmoid(a_operand(r, c))
+                store_matrix(r, c) = sigmoid(a_operand(r, c))
             }
         }
         */
@@ -77,29 +81,29 @@ import spatial.dsl._
 
     }
 
-    def element_tanh(a_operand: SRAM2[T]) : SRAM2[T] = { 
+    def element_tanh(a_operand: SRAM2[T], store_matrix: SRAM2[T]) : SRAM2[T] = { 
 
     	
-        val a_tanh = SRAM[T](a_operand.rows, a_operand.cols)  //a_operand and b_operand are the same size
+        //val a_tanh = SRAM[T](a_operand.rows, a_operand.cols)  //a_operand and b_operand are the same size
         
         Foreach(a_operand.rows.to[Int] by 1) { r =>
             Foreach(a_operand.cols.to[Int] by 1) { c =>
-                a_tanh(r, c) = tanh_test(a_operand(r, c))
+                store_matrix(r, c) = tanh_test(a_operand(r, c))
             }
         }
         
 
-        a_tanh
+        store_matrix
         
     }
 
-    def LSTM_Cell (arg_input_gate: SRAM2[T], arg_forget_gate: SRAM2[T], arg_output_gate: SRAM2[T], arg_memory_cell: SRAM2[T], arg_output: SRAM2[T], arg_state: SRAM2[T], state_mem: SRAM2[T], output_mem: SRAM2[T]): Unit =  {
+    def LSTM_Cell (arg_input_gate: SRAM2[T], arg_forget_gate: SRAM2[T], arg_output_gate: SRAM2[T], arg_memory_cell: SRAM2[T], arg_output: SRAM2[T], arg_state: SRAM2[T], state_mem: SRAM2[T], output_mem: SRAM2[T], store_matrix: SRAM2[T]): Unit =  {
         //state = state * forget_gate + input_gate * memory_cell    
         //output = output_gate * tf.tanh(state)
         
         val state = element_add(element_mult(arg_state, arg_forget_gate, state_mem(0::0, 0::256)), element_mult(arg_input_gate, arg_memory_cell, state_mem(1::1, 0::256)), state_mem(2::2, 0::256))
 
-        val output = element_mult(arg_output_gate, element_tanh(state), output_mem)
+        val output = element_mult(arg_output_gate, element_tanh(state, store_matrix), output_mem)
 
     }
 
@@ -317,6 +321,9 @@ import spatial.dsl._
             val state_sram = SRAM[T](3, 256)
             val output_lstm_sram = SRAM[T](1, 256)
 
+            val activation_sram = SRAM[T](5, 256)
+
+
 
             Sequential.Foreach(7 by 1) { a =>
 
@@ -327,20 +334,20 @@ import spatial.dsl._
                 //4 gate calculations
 
                 val input_gate_matrix = element_add(element_add(matrix_mult(weights_input_gate, input, input_sram(0::0, 0::256)), matrix_mult(output, weights_input_hidden, input_sram(1::1, 0::256)), input_sram(2::2, 0::256)), bias_input, input_sram(3::3, 0::256))        
-                val input_gate = element_sigmoid(input_gate_matrix)
+                val input_gate = element_sigmoid(input_gate_matrix, activation_sram(0::0, 0::256))
       
                 val forget_gate_matrix= element_add(element_add(matrix_mult(weights_forget_gate, input, forget_sram(0::0, 0::256)), matrix_mult(output, weights_forget_hidden, forget_sram(1::1, 0::256)), forget_sram(2::2, 0::256)), bias_forget, forget_sram(3::3, 0::256))
-                val forget_gate = element_sigmoid(forget_gate_matrix)
+                val forget_gate = element_sigmoid(forget_gate_matrix, activation_sram(1::1, 0::256))
                 
                 val output_gate_matrix = element_add(element_add(matrix_mult(weights_output_gate, input, output_sram(0::0, 0::256)), matrix_mult(output, weights_output_hidden, output_sram(1::1, 0::256)), output_sram(2::2, 0::256)), bias_output, output_sram(3::3, 0::256))
-                val output_gate = element_sigmoid(output_gate_matrix)
+                val output_gate = element_sigmoid(output_gate_matrix, activation_sram(2::2, 0::256))
 
                 val memory_cell_matrix = element_add(element_add(matrix_mult(weights_memory_cell, input, memory_sram(0::0, 0::256)), matrix_mult(output, weights_memory_cell_hidden, output_sram(1::1, 0::256)), memory_sram(2::2, 0::256)), bias_memory_cell, memory_sram(3::3, 0::256))
-                val memory_cell = element_tanh(memory_cell_matrix)
+                val memory_cell = element_tanh(memory_cell_matrix, activation_sram(3::3, 0::256))
 
                 //dram = LSMT cell call 
 
-                LSTM_Cell(input_gate, forget_gate, output_gate, memory_cell, state, output, state_sram, output_lstm_sram)
+                LSTM_Cell(input_gate, forget_gate, output_gate, memory_cell, state, output, state_sram, output_lstm_sram,activation_sram(4::4, 0::256))
 
             }                  
                     
