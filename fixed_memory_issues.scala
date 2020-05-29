@@ -94,14 +94,25 @@ import spatial.dsl._
         
     } //end element_tanh
 
+    def store_result (resultant: SRAM2[T], store_matrix: SRAM2[T]) : Unit = {
+        
+        Foreach(resultant.rows.to[Int] by 1) { r =>
+            Foreach(resultant.cols.to[Int] by 1) { c =>
+                store_matrix(r, c) = resultant(r, c)
+            }
+        }
+    }
 
-    def LSTM_Cell (arg_input_gate: SRAM2[T], arg_forget_gate: SRAM2[T], arg_output_gate: SRAM2[T], arg_memory_cell: SRAM2[T], arg_output: SRAM2[T], arg_state: SRAM2[T], state_mem: SRAM2[T], output_mem: SRAM2[T], store_matrix: SRAM2[T]): Unit =  {
+
+    def LSTM_Cell (arg_input_gate: SRAM2[T], arg_forget_gate: SRAM2[T], arg_output_gate: SRAM2[T], arg_memory_cell: SRAM2[T], arg_state: SRAM2[T], arg_output: SRAM2[T], state_mem: SRAM2[T], output_mem: SRAM2[T], store_matrix: SRAM2[T]): Unit =  {
         //state = state * forget_gate + input_gate * memory_cell    
         //output = output_gate * tf.tanh(state)
         
         val state = element_add(element_mult(arg_state, arg_forget_gate, state_mem(0::0, 0::256)), element_mult(arg_input_gate, arg_memory_cell, state_mem(1::1, 0::256)), state_mem(2::2, 0::256))
-
+        store_result(state, arg_state)
+        
         val output = element_mult(arg_output_gate, element_tanh(state, store_matrix), output_mem)
+        store_result(output, arg_output)
 
     } //end LSTM_Cell
 
@@ -161,7 +172,7 @@ import spatial.dsl._
                 a_tanh := temp2.value
             }
         
-    	} //end Sequential
+        } //end Sequential
 
 
         a_tanh.value  
