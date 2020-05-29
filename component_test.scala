@@ -346,59 +346,61 @@ import spatial.dsl._
             val output_lstm_sram = SRAM[T](1, 256)
 
 
-            input(0, 0) = window(0)
+            Sequential.Foreach(7 by 1) { a =>
+            input(0, 0) = window(a)
 
             val memory_cell_matrix = element_add(element_add(matrix_mult(input, weights_memory_cell, memory_sram(0::0, 0::256)), matrix_mult(output, weights_memory_cell_hidden, output_sram(1::1, 0::256)), memory_sram(2::2, 0::256)), bias_memory_cell, memory_sram(3::3, 0::256))
             val memory_cell = element_tanh(memory_cell_matrix, activation_sram(3::3, 0::256))
 
-            result_one store memory_cell
+            //result_one store memory_cell
 
             val input_gate_matrix = element_add(element_add(matrix_mult(input, weights_input_gate, input_sram(0::0, 0::256)), matrix_mult(output, weights_input_hidden, input_sram(1::1, 0::256)), input_sram(2::2, 0::256)), bias_input, input_sram(3::3, 0::256))        
             val input_gate = element_sigmoid(input_gate_matrix, activation_sram(0::0, 0::256))
 
-            result_two store input_gate
+            //result_two store input_gate
       
             val forget_gate_matrix= element_add(element_add(matrix_mult(input, weights_forget_gate, forget_sram(0::0, 0::256)), matrix_mult(output, weights_forget_hidden, forget_sram(1::1, 0::256)), forget_sram(2::2, 0::256)), bias_forget, forget_sram(3::3, 0::256))
             val forget_gate = element_sigmoid(forget_gate_matrix, activation_sram(1::1, 0::256))
 
-            result_three store forget_gate
+            //result_three store forget_gate
                 
             val output_gate_matrix = element_add(element_add(matrix_mult(input, weights_output_gate, output_sram(0::0, 0::256)), matrix_mult(output, weights_output_hidden, output_sram(1::1, 0::256)), output_sram(2::2, 0::256)), bias_output, output_sram(3::3, 0::256))
             val output_gate = element_sigmoid(output_gate_matrix, activation_sram(2::2, 0::256))
 
-            result_four store output_gate
+            //result_four store output_gate
 
             LSTM_Cell(input_gate, forget_gate, output_gate, memory_cell, state, output, state_sram, output_lstm_sram,activation_sram(4::4, 0::256))
 
 
-            state_dram store state
-            output_dram store output
+            // state_dram store state
+            // output_dram store output
 
-            bias_output_dram store bias_output_layer
+            // bias_output_dram store bias_output_layer
+        }
 
-            val prediction_sram = SRAM[T](2, 1)
-            val prediction = single_element_add(matrix_mult(output, weights_output, prediction_sram(0::0, 0::0)), bias_output_layer(0,0), prediction_sram(1::1, 0::0))
+            val prediction_sram = SRAM[T](1, 1)
+            val prediction = (matrix_mult(output, weights_output, prediction_sram))(0,0) + bias_output_layer(0,0)
 
-            prediction_dram store prediction
+            //prediction_dram store prediction
 
-            argRegOut := prediction(0,0)
+            argRegOut := prediction
             
         }
         
         //printMatrix(getMatrix(a), "element mult: ")
         //printMatrix(getMatrix(b), "element add: ")
-        printMatrix(getMatrix(result_one), "result_one: ")
-        printMatrix(getMatrix(result_two), "result_two: ")
-        printMatrix(getMatrix(result_three), "result_three: ")
-        printMatrix(getMatrix(result_four), "result_four: ")
+        // printMatrix(getMatrix(result_one), "result_one: ")
+        // printMatrix(getMatrix(result_two), "result_two: ")
+        // printMatrix(getMatrix(result_three), "result_three: ")
+        // printMatrix(getMatrix(result_four), "result_four: ")
 
-        printMatrix(getMatrix(bias_output_dram), "bias: ")
+        // printMatrix(getMatrix(bias_output_dram), "bias: ")
 
-        printMatrix(getMatrix(state_dram), "state: ")
-        printMatrix(getMatrix(output_dram), "output: ")
+        // printMatrix(getMatrix(state_dram), "state: ")
+        // printMatrix(getMatrix(output_dram), "output: ")
 
 
-        printMatrix(getMatrix(prediction_dram), "prediction: ")
+        //printMatrix(getMatrix(prediction_dram), "prediction: ")
 
         println("prediction: " + argRegOut.value)
 
