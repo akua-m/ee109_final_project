@@ -100,17 +100,18 @@ import spatial.dsl._
         }
     }
 
-    def LSTM_Cell (arg_input_gate: SRAM2[T], arg_forget_gate: SRAM2[T], arg_output_gate: SRAM2[T], arg_memory_cell: SRAM2[T], arg_output: SRAM2[T], arg_state: SRAM2[T], state_mem: SRAM2[T], output_mem: SRAM2[T], store_matrix: SRAM2[T]): Unit =  {
-        //state = state * forget_gate + input_gate * memory_cell    
+    def LSTM_Cell (arg_input_gate: SRAM2[T], arg_forget_gate: SRAM2[T], arg_output_gate: SRAM2[T], arg_memory_cell: SRAM2[T], arg_output: SRAM2[T], arg_state: SRAM2[T], state_mem1: SRAM2[T], state_mem2: SRAM2[T], state_mem3: SRAM2[T], output_mem: SRAM2[T], store_matrix: SRAM2[T]): Unit =  {
+        //state = state * forget_gate + input_gate * memory_cell   
         //output = output_gate * tf.tanh(state)
-        
-        val state = element_add(element_mult(arg_state, arg_forget_gate, state_mem(0::0, 0::256)), element_mult(arg_input_gate, arg_memory_cell, state_mem(1::1, 0::256)), state_mem(2::2, 0::256))
+       
+        val state = element_add(element_mult(arg_state, arg_forget_gate, state_mem1), element_mult(arg_input_gate, arg_memory_cell, state_mem2), state_mem3)
         store_result(state, arg_state)
-        
+       
         val output = element_mult(arg_output_gate, element_tanh(state, store_matrix), output_mem)
+        //val output = element_mult(arg_output_gate, state, output_mem)
         store_result(output, arg_output)
-
-    } //end LSTM_Cell
+ 
+    } //end LSTM_Cell //end LSTM_Cell
 
 
     def tanh(a_operand: T): T = {
@@ -129,8 +130,10 @@ import spatial.dsl._
             }
                 
 
-            if (sigmoid_lut(0,0) < temp && temp <= sigmoid_lut(0,1)) {
-                temp2 := sigmoid_lut(0,2) 
+            if (temp <= sigmoid_lut(0,0)){ 
+                temp2 := temp
+            } else if (sigmoid_lut(0,0) < temp && temp <= sigmoid_lut(0,1)) {
+                temp2 := sigmoid_lut(0,2)
             } else if (sigmoid_lut(1,0) < temp && temp <= sigmoid_lut(1,1)) {
                 temp2 := sigmoid_lut(1,2) 
             } else if (sigmoid_lut(2,0) < temp && temp <= sigmoid_lut(2,1)) {
@@ -163,7 +166,7 @@ import spatial.dsl._
             
 
             if (a_operand < 0) {
-                a_tanh := 1 - temp2.value
+                a_tanh := -1 * temp2.value
             } else {
                 a_tanh := temp2.value
             }
@@ -256,14 +259,8 @@ import spatial.dsl._
         //println("window_array " + window_array)
 
         val zero_init = (0::256){(j) => 0.to[T] }
-        println("zero_init " + zero_init)
         val zeros = DRAM[T](1, 256)
         setMem(zeros, zero_init)
-
-        //val zero_init_2 = (0::0, 0::256){(i,j) => 0.to[T] }
-        //println("zero_init " + zero_init)
-        //val zeros_2 = DRAM[T](1, 256)
-        //setMem(zeros_2, zero_init_2)
 
         val result_one = DRAM[T](1, 256)
         val result_two = DRAM[T](1, 256)
@@ -361,7 +358,10 @@ import spatial.dsl._
             val activation_sram4 = SRAM[T](1, 256)
             val activation_sram5 = SRAM[T](1, 256)
 
-            val state_sram = SRAM[T](3, 256)
+            val state_sram1 = SRAM[T](1, 256)
+            val state_sram2 = SRAM[T](1, 256)
+            val state_sram3 = SRAM[T](1, 256)
+
             val output_lstm_sram = SRAM[T](1, 256)
 
 
@@ -376,7 +376,7 @@ import spatial.dsl._
             val input_gate_matrix = element_add(element_add(matrix_mult(input, weights_input_gate, input_sram1), matrix_mult(output, weights_input_hidden, input_sram2), input_sram3), bias_input, input_sram4)        
             val input_gate = element_sigmoid(input_gate_matrix, activation_sram2)
 
-            //result_two store input_gate
+            result_two store input_gate
       
             val forget_gate_matrix= element_add(element_add(matrix_mult(input, weights_forget_gate, forget_sram1), matrix_mult(output, weights_forget_hidden, forget_sram2), forget_sram3), bias_forget, forget_sram4)
             val forget_gate = element_sigmoid(forget_gate_matrix, activation_sram3)
@@ -388,7 +388,7 @@ import spatial.dsl._
 
             //result_four store output_gate
 
-            LSTM_Cell(input_gate, forget_gate, output_gate, memory_cell, state, output, state_sram, output_lstm_sram, activation_sram5)
+            LSTM_Cell(input_gate, forget_gate, output_gate, memory_cell, state, output, state_sram1, state_sram2, state_sram3, output_lstm_sram, activation_sram5)
 
 
             // state_dram store state
@@ -409,7 +409,7 @@ import spatial.dsl._
         //printMatrix(getMatrix(a), "element mult: ")
         //printMatrix(getMatrix(b), "element add: ")
         // printMatrix(getMatrix(result_one), "result_one: ")
-        // printMatrix(getMatrix(result_two), "result_two: ")
+         printMatrix(getMatrix(result_two), "result_two: ")
         // printMatrix(getMatrix(result_three), "result_three: ")
         // printMatrix(getMatrix(result_four), "result_four: ")
 
