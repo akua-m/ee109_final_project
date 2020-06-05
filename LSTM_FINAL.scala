@@ -6,75 +6,128 @@ import spatial.dsl._
     type T = FixPt[TRUE, _16, _16]
 
     
-    def matrix_mult(a_operand: SRAM2[T], b_operand: SRAM2[T], store_matrix: SRAM2[T]) : SRAM2[T] = { 
+    def matrix_mult(a_operand: SRAM2[T], b_operand: SRAM2[T]) : SRAM2[T] = { 
 
-        MemReduce(store_matrix)(a_operand.cols by 1) { c => 
-            val temp = SRAM[T](store_matrix.rows, store_matrix.cols)
+        val c_sram = SRAM[T](a_operand.rows, b_operand.cols).buffer
+        init(c_sram)
 
-            Foreach(a_operand.rows.to[Int] by 1) { a =>
-                Foreach(b_operand.cols.to[Int] by 1) { b =>
-                    temp(a, b) = a_operand(a, c) * b_operand(c, b)
+        val tileM = 16
+        val tileN = 16
+        val tileK = 16
+
+
+        Foreach(a_operand.cols by tileK){kk =>
+            val numel_k = min(tileK.to[Int], a_operand.cols - kk)
+            Foreach(a_operand.rows by tileM par 2){mm =>
+                val numel_m = min(tileM.to[Int], a_operand.rows - mm)
+                Foreach(b_operand.cols by tileN par 2){nn =>
+                    val numel_n = min(tileN.to[Int], b_operand.cols - nn)
+                    val tileC = SRAM[T](16, 16).buffer
+                    store_result(c_sram(mm::mm+numel_m, nn::nn+numel_n), tileC)
+
+                    // Your code here
+                    MemFold(tileC)(numel_k by 1 par 2) { k =>
+                        val temp = SRAM[T](tileM, tileN)
+                        Foreach(numel_m by 1 par 2) { m =>
+                          Foreach(numel_n by 1 par 2) { n =>
+                            temp(m, n) = a_operand(mm + m, kk + k) * b_operand(kk + k, nn + n)
+                          }
+                        }
+
+                        temp
+                    }{_+_}        
+
+                    store_result(tileC, c_sram(mm::mm+numel_m, nn::nn+numel_n))
+                    
                 }
-            }
-
-            temp
-        }{_+_}
-
-    } //end matrix_mult
-
-
-    def element_mult(a_operand: SRAM2[T], b_operand: SRAM2[T], store_matrix: SRAM2[T]) : SRAM2[T] = {  
-        
-        Foreach(a_operand.rows.to[Int] by 1) { r =>
-            Foreach(a_operand.cols.to[Int] by 1) { c =>
-                store_matrix(r, c) = a_operand(r, c) * b_operand(r, c)
             }
         }
 
-        store_matrix
+        c_sram
+
+    } //end matrix_mult
+
+    def init (input: SRAM2[T]) : Unit = {
+        
+        Foreach(input.rows.to[Int] by 1) { r =>
+            Foreach(input.cols.to[Int] by 1) { c =>
+                input(r, c) = 0.to[T]
+            }
+        }
+    } //end init
+
+
+    def element_mult(a_operand: SRAM2[T], b_operand: SRAM2[T]) : SRAM2[T] = {  
+
+        val c_sram = SRAM[T](a_operand.rows, a_operand.cols)
+        
+        Foreach(a_operand.rows.to[Int] by 1) { r =>
+            Foreach(a_operand.cols.to[Int] by 1) { c =>
+                c_sram(r, c) = a_operand(r, c) * b_operand(r, c)
+            }
+        }
+
+        c_sram
 
     } //end element_mult
 
 
-    def element_add(a_operand: SRAM2[T], b_operand: SRAM2[T], store_matrix: SRAM2[T]) : SRAM2[T] = { 
+    def element_add(a_operand: SRAM2[T], b_operand: SRAM2[T]) : SRAM2[T] = { 
+
+        val c_sram = SRAM[T](a_operand.rows, a_operand.cols)
         
         Foreach(a_operand.rows.to[Int] by 1) { r =>
             Foreach(a_operand.cols.to[Int] by 1) { c =>
-                store_matrix(r, c) = a_operand(r, c) + b_operand(r, c)
+                c_sram(r, c) = a_operand(r, c) + b_operand(r, c)
             }
         }
 
-        store_matrix
+        c_sram
 
     } //end element_add
 
+    def sigmoid (a_operand: T): T = {
+        val a_sigmoid = Reg[T](0)
+        if (a_operand < -2.5.to[T]){
+            a_sigmoid := 0.to[T]
+        } else if (a_operand > 2.5.to[T]) {
+            a_sigmoid := 1.to[T]
+        } else {
+            a_sigmoid := (0.2.to[T] * a_operand + 0.5.to[T])
+        }
 
-    def element_sigmoid(a_operand: SRAM2[T], store_matrix: SRAM2[T]) : SRAM2[T] = { 
+        a_sigmoid.value  
+
+    } //end sigmoid
+
+    def element_sigmoid(a_operand: SRAM2[T]) : SRAM2[T] = { 
 
         //sigmoid formula: sigmoid(x) = (tanh(x/2) + 1) / 2
 
+        val c_sram = SRAM[T](a_operand.rows, a_operand.cols)
+
         Foreach(a_operand.rows.to[Int] by 1) { r =>
             Foreach(a_operand.cols.to[Int] by 1) { c =>
-                val tanh_value = tanh((a_operand(r, c) / 2))
-                val sigmoid = (tanh_value + 1) / 2
-                store_matrix(r, c) = sigmoid
+                c_sram(r,c) = sigmoid(a_operand(r,c))
             }
         }
 
-        store_matrix
+        c_sram
 
     } //end element_sigmoid
 
 
-    def element_tanh(a_operand: SRAM2[T], store_matrix: SRAM2[T]) : SRAM2[T] = { 
+    def element_tanh(a_operand: SRAM2[T]) : SRAM2[T] = { 
+
+        val c_sram = SRAM[T](a_operand.rows, a_operand.cols)
         
         Foreach(a_operand.rows.to[Int] by 1) { r =>
             Foreach(a_operand.cols.to[Int] by 1) { c =>
-                store_matrix(r, c) = tanh(a_operand(r, c))
+                c_sram(r, c) = 2 * sigmoid(2 * a_operand(r,c)) - 1
             }
         }
         
-        store_matrix
+        c_sram
         
     } //end element_tanh
 
@@ -89,96 +142,19 @@ import spatial.dsl._
     } //end store_result
 
 
-    def LSTM_Cell (arg_input_gate: SRAM2[T], arg_forget_gate: SRAM2[T], arg_output_gate: SRAM2[T], arg_memory_cell: SRAM2[T], arg_state: SRAM2[T], arg_output: SRAM2[T], state_mem1: SRAM2[T], state_mem2: SRAM2[T], state_mem3: SRAM2[T], output_mem: SRAM2[T], store_matrix: SRAM2[T]): Unit =  {
+    def LSTM_Cell (arg_input_gate: SRAM2[T], arg_forget_gate: SRAM2[T], arg_output_gate: SRAM2[T], arg_memory_cell: SRAM2[T], arg_state: SRAM2[T], arg_output: SRAM2[T]): Unit =  {
         //state = state * forget_gate + input_gate * memory_cell   
         //output = output_gate * tf.tanh(state)
        
-        val state = element_add(element_mult(arg_state, arg_forget_gate, state_mem1), element_mult(arg_input_gate, arg_memory_cell, state_mem2), state_mem3)
+        val state = element_add(element_mult(arg_state, arg_forget_gate), element_mult(arg_input_gate, arg_memory_cell))
         store_result(state, arg_state)
        
-        val output = element_mult(arg_output_gate, element_tanh(state, store_matrix), output_mem)
+        val output = element_mult(arg_output_gate, element_tanh(state))
         store_result(output, arg_output)
  
     } //end LSTM_Cell
 
 
-    def tanh(a_operand: T): T = {
-        val sigmoid_lut = LUT[T](15,3)(0.390625.to[T], 0.453125.to[T], 0.4049.to[T], 
-                                        0.453125.to[T], 0.515625.to[T], 0.4558.to[T], 
-                                        0.515625.to[T], 0.578125.to[T], 0.5038.to[T], 
-                                        0.578125.to[T], 0.640625.to[T], 0.5490.to[T], 
-                                        0.640625.to[T], 0.703125.to[T], 0.5911.to[T], 
-                                        0.703125.to[T], 0.78125.to[T], 0.6348.to[T], 
-                                        0.78125.to[T], 0.859375.to[T], 0.6791.to[T], 
-                                        0.859375.to[T], 0.9375.to[T], 0.7190.to[T], 
-                                        0.9375.to[T], 1.046875.to[T], 0.7609.to[T], 
-                                        1.046875.to[T], 1.171875.to[T], 0.8057.to[T], 
-                                        1.171875.to[T], 1.328125.to[T], 0.8493.to[T], 
-                                        1.328125.to[T], 1.53125.to[T], 0.8916.to[T], 
-                                        1.53125.to[T], 1.859375.to[T], 0.9329.to[T], 
-                                        1.859375.to[T], 2.90625.to[T], 0.9740.to[T], 
-                                        2.90625.to[T], 2.90625.to[T], 1.to[T])
-
-        val a_tanh = Reg[T](0)
-
-        val temp = Reg[T](0)
-        val temp2 = Reg[T](0)
-
-        Sequential { 
-
-            if (a_operand < 0) {
-                temp := -1 * a_operand
-            } else {
-                temp := a_operand
-            }
-                
-
-            if (temp <= sigmoid_lut(0,0)){ 
-                temp2 := temp
-            } else if (sigmoid_lut(0,0) < temp && temp <= sigmoid_lut(0,1)) {
-                temp2 := sigmoid_lut(0,2) 
-            } else if (sigmoid_lut(1,0) < temp && temp <= sigmoid_lut(1,1)) {
-                temp2 := sigmoid_lut(1,2) 
-            } else if (sigmoid_lut(2,0) < temp && temp <= sigmoid_lut(2,1)) {
-                temp2 := sigmoid_lut(2,2)
-            } else if (sigmoid_lut(3,0) < temp && temp <= sigmoid_lut(3,1)) {
-                temp2 := sigmoid_lut(3,2)
-            } else if (sigmoid_lut(4,0) < temp && temp <= sigmoid_lut(4,1)) {
-                temp2 := sigmoid_lut(4,2)
-            } else if (sigmoid_lut(5,0) < temp && temp <= sigmoid_lut(5,1)) {
-                temp2 := sigmoid_lut(5,2)
-            } else if (sigmoid_lut(6,0) < temp && temp <= sigmoid_lut(6,1)) {
-                temp2 := sigmoid_lut(6,2)
-            } else if (sigmoid_lut(7,0) < temp && temp <= sigmoid_lut(7,1)) {
-                temp2 := sigmoid_lut(7,2)
-            } else if (sigmoid_lut(8,0) < temp && temp <= sigmoid_lut(8,1)) {
-                temp2 := sigmoid_lut(8,2)
-            } else if (sigmoid_lut(9,0) < temp && temp <= sigmoid_lut(9,1)) {
-                temp2 := sigmoid_lut(9,2)
-            } else if (sigmoid_lut(10,0) < temp && temp <= sigmoid_lut(10,1)) {
-                temp2 := sigmoid_lut(10,2)
-            } else if (sigmoid_lut(11,0) < temp && temp<= sigmoid_lut(11,1)) {
-                temp2 := sigmoid_lut(11,2)
-            } else if (sigmoid_lut(12,0) < temp && temp<= sigmoid_lut(12,1)) {
-                temp2 := sigmoid_lut(12,2)
-            } else if (sigmoid_lut(13,0) < temp && temp <= sigmoid_lut(13,1)) {
-                temp2 := sigmoid_lut(13,2)
-            } else {
-                temp2 := sigmoid_lut(14,2)
-            }
-            
-
-            if (a_operand < 0) {
-                a_tanh := -1 * temp2.value
-            } else {
-                a_tanh := temp2.value
-            }
-        
-        } //end Sequential
-
-        a_tanh.value  
-
-    } //end tanh
     
 
     
@@ -252,14 +228,14 @@ import spatial.dsl._
 
 
         //for debugging: 
-        //val result_one = DRAM[T](1, 256)
-        //val result_two = DRAM[T](1, 256)
-        //val result_three = DRAM[T](1, 256)
-        //val result_four = DRAM[T](1, 256)
-        //val state_dram = DRAM[T](1, 256)
-        //val output_dram = DRAM[T](1, 256)
-        //val prediction_dram = DRAM[T](1, 1)
-        //val bias_output_dram = DRAM[T](1,1)
+        // val result_one = DRAM[T](1, 256)
+        // val result_two = DRAM[T](1, 256)
+        // val result_three = DRAM[T](1, 256)
+        // val result_four = DRAM[T](1, 256)
+        // val state_dram = DRAM[T](1, 256)
+        // val output_dram = DRAM[T](1, 256)
+        // val prediction_dram = DRAM[T](1, 1)
+        // val bias_output_dram = DRAM[T](1,1)
 
         Accel { 
 
@@ -319,66 +295,33 @@ import spatial.dsl._
 
             val input = SRAM[T](1, 1)
 
-            val input_sram1 = SRAM[T](1, 256)
-            val input_sram2 = SRAM[T](1, 256)
-            val input_sram3 = SRAM[T](1, 256)
-            val input_sram4 = SRAM[T](1, 256)
-
-            val forget_sram1 = SRAM[T](1, 256)
-            val forget_sram2 = SRAM[T](1, 256)
-            val forget_sram3 = SRAM[T](1, 256)
-            val forget_sram4 = SRAM[T](1, 256)
-
-            val output_sram1 = SRAM[T](1, 256)
-            val output_sram2 = SRAM[T](1, 256)
-            val output_sram3 = SRAM[T](1, 256)
-            val output_sram4 = SRAM[T](1, 256)
-
-            val memory_sram1 = SRAM[T](1, 256)
-            val memory_sram2 = SRAM[T](1, 256)
-            val memory_sram3 = SRAM[T](1, 256)
-            val memory_sram4 = SRAM[T](1, 256)
-
-            val activation_sram1 = SRAM[T](1, 256)
-            val activation_sram2 = SRAM[T](1, 256)
-            val activation_sram3 = SRAM[T](1, 256)
-            val activation_sram4 = SRAM[T](1, 256)
-            val activation_sram5 = SRAM[T](1, 256)
-
-            val state_sram1 = SRAM[T](1, 256)
-            val state_sram2 = SRAM[T](1, 256)
-            val state_sram3 = SRAM[T](1, 256)
-
-            val output_lstm_sram = SRAM[T](1, 256)
-
-
             Sequential.Foreach(7 by 1) { a =>
                 input(0, 0) = window(a)
 
-                val input_gate_matrix = element_add(element_add(matrix_mult(input, weights_input_gate, input_sram1), matrix_mult(output, weights_input_hidden, input_sram2), input_sram3), bias_input, input_sram4)        
-                val input_gate = element_sigmoid(input_gate_matrix, activation_sram2)
+                val input_gate_matrix = element_add(element_add(matrix_mult(input, weights_input_gate), matrix_mult(output, weights_input_hidden)), bias_input)        
+                val input_gate = element_sigmoid(input_gate_matrix)
                 //for debugging: result_two store input_gate
           
-                val forget_gate_matrix= element_add(element_add(matrix_mult(input, weights_forget_gate, forget_sram1), matrix_mult(output, weights_forget_hidden, forget_sram2), forget_sram3), bias_forget, forget_sram4)
-                val forget_gate = element_sigmoid(forget_gate_matrix, activation_sram3)
+                val forget_gate_matrix= element_add(element_add(matrix_mult(input, weights_forget_gate), matrix_mult(output, weights_forget_hidden)), bias_forget)
+                val forget_gate = element_sigmoid(forget_gate_matrix)
                 //for debugging: result_three store forget_gate
                     
-                val output_gate_matrix = element_add(element_add(matrix_mult(input, weights_output_gate, output_sram1), matrix_mult(output, weights_output_hidden, output_sram2), output_sram3), bias_output, output_sram4)
-                val output_gate = element_sigmoid(output_gate_matrix, activation_sram4)
-                //for debuggin: result_four store output_gate
+                val output_gate_matrix = element_add(element_add(matrix_mult(input, weights_output_gate), matrix_mult(output, weights_output_hidden)), bias_output)
+                val output_gate = element_sigmoid(output_gate_matrix)
+                //for debuggin: esult_four store output_gate
 
-                val memory_cell_matrix = element_add(element_add(matrix_mult(input, weights_memory_cell, memory_sram1), matrix_mult(output, weights_memory_cell_hidden, memory_sram2), memory_sram3), bias_memory_cell, memory_sram4)
-                val memory_cell = element_tanh(memory_cell_matrix, activation_sram1)
+                val memory_cell_matrix = element_add(element_add(matrix_mult(input, weights_memory_cell), matrix_mult(output, weights_memory_cell_hidden)), bias_memory_cell)
+                val memory_cell = element_tanh(memory_cell_matrix)
                 //for debugging: result_one store memory_cell
 
-                LSTM_Cell(input_gate, forget_gate, output_gate, memory_cell, state, output, state_sram1, state_sram2, state_sram3, output_lstm_sram, activation_sram5)
+                LSTM_Cell(input_gate, forget_gate, output_gate, memory_cell, state, output)
                 //for debugging: state_dram store state
                 //for debugging: output_dram store output
 
             } //end Sequential
 
             val prediction_sram = SRAM[T](1, 1)
-            val prediction = (matrix_mult(output, weights_output, prediction_sram))(0,0) + bias_output_layer(0,0)
+            val prediction = (matrix_mult(output, weights_output))(0,0) + bias_output_layer(0,0)
 
             argRegOut := prediction
             
@@ -388,14 +331,12 @@ import spatial.dsl._
         println("prediction: " + argRegOut.value)
 
         //for debugging: 
-        //printMatrix(getMatrix(result_one), "result_one: ")
-        //printMatrix(getMatrix(result_two), "result_two: ")
-        //printMatrix(getMatrix(result_three), "result_three: ")
-        //printMatrix(getMatrix(result_four), "result_four: ")
-        //printMatrix(getMatrix(bias_output_dram), "bias: ")
-        //printMatrix(getMatrix(state_dram), "state: ")
-        //printMatrix(getMatrix(output_dram), "output: ")
-        //printMatrix(getMatrix(prediction_dram), "prediction: ")
+        // printMatrix(getMatrix(result_one), "result_one: ")
+        // printMatrix(getMatrix(result_two), "result_two: ")
+        // printMatrix(getMatrix(result_three), "result_three: ")
+        // printMatrix(getMatrix(result_four), "result_four: ")
+        // printMatrix(getMatrix(state_dram), "state: ")
+        // printMatrix(getMatrix(output_dram), "output: ")
 
     } //end main
 }
