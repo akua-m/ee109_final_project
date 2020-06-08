@@ -1,7 +1,7 @@
 import spatial.dsl._
 
 
-@spatial object LSTM2 extends SpatialApp { 
+@spatial object LSTM extends SpatialApp { 
 
     type T = FixPt[TRUE, _16, _16]
     
