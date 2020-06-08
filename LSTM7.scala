@@ -20,16 +20,16 @@ import spatial.dsl._
             val numel_k = min(tileK.to[Int], a_operand.cols - kk)
             Foreach(a_operand.rows by tileM par 2){mm =>
                 val numel_m = min(tileM.to[Int], a_operand.rows - mm)
-                Foreach(b_operand.cols by tileN par 2){nn =>
+                Foreach(b_operand.cols by tileN par 1){nn =>
                     val numel_n = min(tileN.to[Int], b_operand.cols - nn)
                     val tileC = SRAM[T](16, 16).buffer
                     store_result(c_sram(mm::mm+numel_m, nn::nn+numel_n), tileC)
 
                     // Your code here
-                    MemFold(tileC)(numel_k by 1 par 2) { k =>
+                    MemFold(tileC)(numel_k by 1 par 1) { k =>
                         val temp = SRAM[T](tileM, tileN)
-                        Foreach(numel_m by 1 par 2) { m =>
-                          Foreach(numel_n by 1 par 2) { n =>
+                        Foreach(numel_m by 1 par 1) { m =>
+                          Foreach(numel_n by 1 par 1) { n =>
                             temp(m, n) = a_operand(mm + m, kk + k) * b_operand(kk + k, nn + n)
                           }
                         }

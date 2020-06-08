@@ -8,41 +8,41 @@ import spatial.dsl._
     //Function: Tiled, general matrix-multiplication
     def matrix_mult(a_operand: SRAM2[T], b_operand: SRAM2[T]) : SRAM2[T] = { 
 
-            val c_sram = SRAM[T](a_operand.rows, b_operand.cols).buffer
-            init(c_sram)
+        val c_sram = SRAM[T](a_operand.rows, b_operand.cols).buffer
+        init(c_sram)
 
-            val tileM = 16
-            val tileN = 16
-            val tileK = 16
+        val tileM = 16
+        val tileN = 16
+        val tileK = 16
 
 
-            Foreach(a_operand.cols by tileK){kk =>
-                val numel_k = min(tileK.to[Int], a_operand.cols - kk)
-                Foreach(a_operand.rows by tileM par 1){mm =>
-                    val numel_m = min(tileM.to[Int], a_operand.rows - mm)
-                    Foreach(b_operand.cols by tileN par 2){nn =>
-                        val numel_n = min(tileN.to[Int], b_operand.cols - nn)
-                        val tileC = SRAM[T](16, 16).buffer
-                        store_result(c_sram(mm::mm+numel_m, nn::nn+numel_n), tileC)
+        Foreach(a_operand.cols by tileK){kk =>
+            val numel_k = min(tileK.to[Int], a_operand.cols - kk)
+            Foreach(a_operand.rows by tileM par 2){mm =>
+                val numel_m = min(tileM.to[Int], a_operand.rows - mm)
+                Foreach(b_operand.cols by tileN par 1){nn =>
+                    val numel_n = min(tileN.to[Int], b_operand.cols - nn)
+                    val tileC = SRAM[T](16, 16).buffer
+                    store_result(c_sram(mm::mm+numel_m, nn::nn+numel_n), tileC)
 
-                        // Your code here
-                        MemFold(tileC)(numel_k by 1 par 1) { k =>
-                            val temp = SRAM[T](tileM, tileN)
-                            Foreach(numel_m by 1 par 1) { m =>
-                              Foreach(numel_n by 1 par 1) { n =>
-                                temp(m, n) = a_operand(mm + m, kk + k) * b_operand(kk + k, nn + n)
-                              }
-                            }
+                    // Your code here
+                    MemFold(tileC)(numel_k by 1 par 1) { k =>
+                        val temp = SRAM[T](tileM, tileN)
+                        Foreach(numel_m by 1 par 1) { m =>
+                          Foreach(numel_n by 1 par 1) { n =>
+                            temp(m, n) = a_operand(mm + m, kk + k) * b_operand(kk + k, nn + n)
+                          }
+                        }
 
-                            temp
-                        }{_+_}        
+                        temp
+                    }{_+_}        
 
-                        store_result(tileC, c_sram(mm::mm+numel_m, nn::nn+numel_n))
-                        
-                    }
+                    store_result(tileC, c_sram(mm::mm+numel_m, nn::nn+numel_n))
+                    
                 }
             }
         }
+        c_sram  
     }
 
     //Function: initializes all elements of passed SRAM to 0 (zero)
@@ -165,7 +165,7 @@ import spatial.dsl._
         //Register for prediciton
         val argRegOut = ArgOut[T]
     
-    	//Read pre-calculated weights from CSV files, load onto DRAMs
+        //Read pre-calculated weights from CSV files, load onto DRAMs
         val bias_forget_array = loadCSV1D[T]("/home/akuam/spatial/apps/src/bias_forget_final.csv", ",")
         val bias_f_mem = DRAM[T](1, 256)
         setMem(bias_f_mem, bias_forget_array)
@@ -235,7 +235,7 @@ import spatial.dsl._
 
         Accel { 
 
-        	//set memories: bring all matrices/data from DRAM to SRAMS
+            //set memories: bring all matrices/data from DRAM to SRAMS
 
             val bias_output_layer = SRAM[T](1, 1)
             bias_output_layer(0,0) = 0.10646543651819229125976562500000.to[T]
@@ -297,19 +297,19 @@ import spatial.dsl._
                 input(0, 0) = window(a)
 
                 val input_gate_matrix = element_add(element_add(matrix_mult(input, weights_input_gate), matrix_mult(output, weights_input_hidden)), bias_input)        
-                val input_gate1 = element_sigmoid(input_gate_matrix)
+                val input_gate = element_sigmoid(input_gate_matrix)
                 //for debugging: result_two store input_gate
           
                 val forget_gate_matrix= element_add(element_add(matrix_mult(input, weights_forget_gate), matrix_mult(output, weights_forget_hidden)), bias_forget)
-                val forget_gate1 = element_sigmoid(forget_gate_matrix)
+                val forget_gate = element_sigmoid(forget_gate_matrix)
                 //for debugging: result_three store forget_gate
                     
                 val output_gate_matrix = element_add(element_add(matrix_mult(input, weights_output_gate), matrix_mult(output, weights_output_hidden)), bias_output)
-                val output_gate1 = element_sigmoid(output_gate_matrix)
+                val output_gate = element_sigmoid(output_gate_matrix)
                 //for debuggin: esult_four store output_gate
 
                 val memory_cell_matrix = element_add(element_add(matrix_mult(input, weights_memory_cell), matrix_mult(output, weights_memory_cell_hidden)), bias_memory_cell)
-                val memory_cell1 = element_tanh(memory_cell_matrix)
+                val memory_cell = element_tanh(memory_cell_matrix)
 
                 LSTM_Cell(input_gate, forget_gate, output_gate, memory_cell, state, output)
                 //for debugging: state_dram store state
@@ -341,18 +341,13 @@ import spatial.dsl._
 
 /* 
 // These functions were not used for the final implementation. 
-
 //Function: Tiled, general matrix-multiplication
 def matrix_mult(a_operand: SRAM2[T], b_operand: SRAM2[T]) : SRAM2[T] = { 
-
         val c_sram = SRAM[T](a_operand.rows, b_operand.cols).buffer
         init(c_sram)
-
         val tileM = 16
         val tileN = 16
         val tileK = 16
-
-
         Foreach(a_operand.cols by tileK){kk =>
             val numel_k = min(tileK.to[Int], a_operand.cols - kk)
             Foreach(a_operand.rows by tileM par 2){mm =>
@@ -361,7 +356,6 @@ def matrix_mult(a_operand: SRAM2[T], b_operand: SRAM2[T]) : SRAM2[T] = {
                     val numel_n = min(tileN.to[Int], b_operand.cols - nn)
                     val tileC = SRAM[T](16, 16).buffer
                     store_result(c_sram(mm::mm+numel_m, nn::nn+numel_n), tileC)
-
                     // Your code here
                     MemFold(tileC)(numel_k by 1 par 2) { k =>
                         val temp = SRAM[T](tileM, tileN)
@@ -370,10 +364,8 @@ def matrix_mult(a_operand: SRAM2[T], b_operand: SRAM2[T]) : SRAM2[T] = {
                             temp(m, n) = a_operand(mm + m, kk + k) * b_operand(kk + k, nn + n)
                           }
                         }
-
                         temp
                     }{_+_}        
-
                     store_result(tileC, c_sram(mm::mm+numel_m, nn::nn+numel_n))
                     
                 }
@@ -381,8 +373,6 @@ def matrix_mult(a_operand: SRAM2[T], b_operand: SRAM2[T]) : SRAM2[T] = {
         }
     }
 }
-
-
 // Function: calculate the tanh of passed value
 // source: An Optimized Lookup-Table for the Evaluation of Sigmoid Function for Artificial Neural Networks
 def tanh(a_operand: T): T = {
@@ -401,14 +391,10 @@ def tanh(a_operand: T): T = {
                                     1.53125.to[T], 1.859375.to[T], 0.9329.to[T], 
                                     1.859375.to[T], 2.90625.to[T], 0.9740.to[T], 
                                     2.90625.to[T], 2.90625.to[T], 1.to[T])
-
     val a_tanh = Reg[T](0)
-
     val temp = Reg[T](0)
     val temp2 = Reg[T](0)
-
     Sequential { 
-
         if (a_operand < 0) {
             temp := -1 * a_operand
         } else {
@@ -451,7 +437,6 @@ def tanh(a_operand: T): T = {
             temp2 := sigmoid_lut(14,2)
         }
         
-
         if (a_operand < 0) {
             a_tanh := -1 * temp2.value
         } else {
@@ -459,8 +444,6 @@ def tanh(a_operand: T): T = {
         }
     
     } //end Sequential
-
     a_tanh.value  
-
 }
 */
