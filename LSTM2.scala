@@ -273,19 +273,19 @@ import spatial.dsl._
                 input(0, 0) = window(a)
 
                 val input_gate_matrix = element_add(element_add(matrix_mult(input, weights_input_gate), matrix_mult(output, weights_input_hidden)), bias_input)        
-                val input_gate1 = element_sigmoid(input_gate_matrix)
+                val input_gate = element_sigmoid(input_gate_matrix)
                 //for debugging: result_two store input_gate
           
                 val forget_gate_matrix= element_add(element_add(matrix_mult(input, weights_forget_gate), matrix_mult(output, weights_forget_hidden)), bias_forget)
-                val forget_gate1 = element_sigmoid(forget_gate_matrix)
+                val forget_gate = element_sigmoid(forget_gate_matrix)
                 //for debugging: result_three store forget_gate
                     
                 val output_gate_matrix = element_add(element_add(matrix_mult(input, weights_output_gate), matrix_mult(output, weights_output_hidden)), bias_output)
-                val output_gate1 = element_sigmoid(output_gate_matrix)
+                val output_gate = element_sigmoid(output_gate_matrix)
                 //for debuggin: esult_four store output_gate
 
                 val memory_cell_matrix = element_add(element_add(matrix_mult(input, weights_memory_cell), matrix_mult(output, weights_memory_cell_hidden)), bias_memory_cell)
-                val memory_cell1 = element_tanh(memory_cell_matrix)
+                val memory_cell = element_tanh(memory_cell_matrix)
                 //for debugging: result_one store memory_cell
 
 

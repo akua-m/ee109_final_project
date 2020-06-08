@@ -289,19 +289,19 @@ import spatial.dsl._
                 input(0, 0) = window(a)
 
                 val input_gate_matrix = element_add(element_add(matrix_mult(input, weights_input_gate, input_sram1), matrix_mult(output, weights_input_hidden, input_sram2), input_sram3), bias_input, input_sram4)        
-                val input_gate1 = element_sigmoid(input_gate_matrix, activation_sram2)
+                val input_gate = element_sigmoid(input_gate_matrix, activation_sram2)
                 //for debugging: result_two store input_gate
           
                 val forget_gate_matrix= element_add(element_add(matrix_mult(input, weights_forget_gate, forget_sram1), matrix_mult(output, weights_forget_hidden, forget_sram2), forget_sram3), bias_forget, forget_sram4)
-                val forget_gate1 = element_sigmoid(forget_gate_matrix, activation_sram3)
+                val forget_gate = element_sigmoid(forget_gate_matrix, activation_sram3)
                 //for debugging: result_three store forget_gate
                     
                 val output_gate_matrix = element_add(element_add(matrix_mult(input, weights_output_gate, output_sram1), matrix_mult(output, weights_output_hidden, output_sram2), output_sram3), bias_output, output_sram4)
-                val output_gate1 = element_sigmoid(output_gate_matrix, activation_sram4)
+                val output_gate = element_sigmoid(output_gate_matrix, activation_sram4)
                 //for debuggin: result_four store output_gate
 
                 val memory_cell_matrix = element_add(element_add(matrix_mult(input, weights_memory_cell, memory_sram1), matrix_mult(output, weights_memory_cell_hidden, memory_sram2), memory_sram3), bias_memory_cell, memory_sram4)
-                val memory_cell1 = element_tanh(memory_cell_matrix, activation_sram1)
+                val memory_cell = element_tanh(memory_cell_matrix, activation_sram1)
                 //for debugging: result_one store memory_cell
 
 
@@ -311,6 +311,7 @@ import spatial.dsl._
 
             } //end Sequential
 
+            val prediction_sram = SRAM[T](1,1)
             val prediction = (matrix_mult(output, weights_output, prediction_sram))(0,0) + bias_output_layer(0,0)
 
             argRegOut := prediction
